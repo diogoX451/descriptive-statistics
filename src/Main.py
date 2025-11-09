@@ -1,6 +1,7 @@
 from Processor.Factory import create_data, load_implementations
-from Processor.Analysis import infer_variable_type, calc_frequencies, calc_central_tendency
+from Processor.Analysis import infer_variable_type, calc_frequencies, calc_central_tendency ,  calc_separatrizes, calc_dispersion
 import os
+import pandas as pd
 
 
 def main():
@@ -32,3 +33,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+print( "Exemplo de dados bloco 3")
+dados = pd.Series([10, 12, 15, 18, 20, 25, 30, 35, 40])
+
+print("Separatrizes:")
+print(calc_separatrizes(dados))
+
+print("\nDispersao:")
+print(calc_dispersion(dados))

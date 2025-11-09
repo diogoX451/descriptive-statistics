@@ -86,3 +86,64 @@ def calc_central_tendency(series: pd.Series) -> Dict[str, Any]:
         res["mode"] = modes.tolist()
 
     return res
+
+
+# -----------------------------------------------
+# 6️⃣ Separatrizes: Quartis, Decis e Percentis
+# -----------------------------------------------
+def calc_separatrizes(series: pd.Series) -> Dict[str, Any]:
+    """Calcular quartis, decis e percentis para variáveis numéricas."""
+    s = series.dropna()
+    res: Dict[str, Any] = {}
+
+    if s.empty or s.dtype.kind not in ("i", "f"):
+        return {"quartis": None, "decis": None, "percentis": None}
+
+    # Quartis
+    quartis = {
+        "Q1": float(s.quantile(0.25)),
+        "Q2 (Mediana)": float(s.quantile(0.5)),
+        "Q3": float(s.quantile(0.75)),
+    }
+
+    # Decis (dividem em 10 partes)
+    decis = {f"D{i}": float(s.quantile(i / 10)) for i in range(1, 10)}
+
+    # Percentis (dividem em 100 partes, aqui mostramos de 10 em 10 pra não ficar enorme)
+    percentis = {f"P{i}": float(s.quantile(i / 100)) for i in range(10, 100, 10)}
+
+    res["quartis"] = quartis
+    res["decis"] = decis
+    res["percentis"] = percentis
+
+    return res
+
+ # Bloco 3 - Position and Spread Analysis 
+#  Dispersão: Amplitude, Variância, Desvio Padrão, Q3-Q1 e Coeficiente de Variação
+
+def calc_dispersion(series: pd.Series) -> Dict[str, Any]:
+    """Calcular medidas de dispersão para variáveis numéricas."""
+    s = series.dropna()
+
+    if s.empty or s.dtype.kind not in ("i", "f"):
+        return {
+            "amplitude": None,
+            "variancia": None,
+            "desvio_padrao": None,
+            "Q3-Q1": None,
+            "coef_var": None,
+        }
+
+    amplitude = float(s.max() - s.min())
+    variancia = float(s.var())
+    desvio_padrao = float(s.std())
+    q3_q1 = float(s.quantile(0.75) - s.quantile(0.25))
+    coef_var = (desvio_padrao / s.mean()) * 100 if s.mean() != 0 else None
+
+    return {
+        "amplitude": amplitude,
+        "variancia": variancia,
+        "desvio_padrao": desvio_padrao,
+        "Q3-Q1": q3_q1,
+        "coef_var": coef_var,
+    }
