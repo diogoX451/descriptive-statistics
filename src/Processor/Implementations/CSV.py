@@ -26,3 +26,19 @@ class CSV(AData):
             self.file_path = file_path
         self.data = pd.read_csv(self.file_path)
         return self.data
+
+    def all_classificators(self):
+        """Retorna a lista de classificadores disponíveis para estes dados.
+
+        Implementação mínima: retorna lista vazia. Pode ser estendida posteriormente
+        para integrar classificadores em `Processor/Classificator`.
+        """
+        return []
+
+    def get_classificator(self, name):
+        """Retorna um classificador pelo nome.
+
+        Implementação mínima: lança KeyError indicando não encontrado. Subclasses
+        ou integração futura podem retornar um objeto de classificador.
+        """
+        raise KeyError(f"Classificador '{name}' não encontrado.")
