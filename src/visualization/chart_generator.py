@@ -174,7 +174,7 @@ class ChartGenerator:
         plt.close()
         charts.append(chart_path)
 
-        # 2. Boxplot
+        # 2. Boxplot com pontos individuais
         fig, ax = plt.subplots(figsize=(10, 6))
 
         bp = ax.boxplot([data_clean], vert=True, patch_artist=True,
@@ -185,16 +185,25 @@ class ChartGenerator:
             patch.set_facecolor('lightblue')
             patch.set_alpha(0.7)
 
+        # Adiciona pontos individuais (strip plot)
+        # Adiciona jitter (ruído horizontal) para ver pontos sobrepostos
+        x_positions = np.random.normal(1, 0.04, size=len(data_clean))
+        ax.scatter(x_positions, data_clean, alpha=0.4, s=30, color='navy',
+                  edgecolors='darkblue', linewidth=0.5, zorder=3,
+                  label='Dados individuais')
+
         ax.set_ylabel('Valores', fontsize=12, fontweight='bold')
-        ax.set_title(f'Boxplot - {variable_name}', fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f'Boxplot com Distribuição de Pontos - {variable_name}',
+                    fontsize=14, fontweight='bold', pad=20)
         ax.grid(axis='y', alpha=0.3)
+        ax.legend(loc='upper right')
 
         # Adiciona informações estatísticas
         q1 = analysis_result['separatrizes']['quartis']['Q1']
         q2 = analysis_result['separatrizes']['quartis']['Q2']
         q3 = analysis_result['separatrizes']['quartis']['Q3']
 
-        text_info = f'Q1: {q1:.2f}\nQ2: {q2:.2f}\nQ3: {q3:.2f}'
+        text_info = f'Q1: {q1:.2f}\nQ2: {q2:.2f}\nQ3: {q3:.2f}\nn = {len(data_clean)}'
         ax.text(1.15, q2, text_info, fontsize=10,
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
@@ -258,8 +267,8 @@ class ChartGenerator:
         plt.close()
         charts.append(chart_path)
 
-        # 2. Boxplot Horizontal
-        fig, ax = plt.subplots(figsize=(12, 4))
+        # 2. Boxplot Horizontal com pontos individuais
+        fig, ax = plt.subplots(figsize=(12, 5))
 
         bp = ax.boxplot([data_clean], vert=False, patch_artist=True,
                         labels=[variable_name], widths=0.5)
@@ -268,9 +277,18 @@ class ChartGenerator:
             patch.set_facecolor('lightcoral')
             patch.set_alpha(0.7)
 
+        # Adiciona pontos individuais (strip plot horizontal)
+        # Adiciona jitter (ruído vertical) para ver pontos sobrepostos
+        y_positions = np.random.normal(1, 0.04, size=len(data_clean))
+        ax.scatter(data_clean, y_positions, alpha=0.4, s=30, color='darkred',
+                  edgecolors='maroon', linewidth=0.5, zorder=3,
+                  label='Dados individuais')
+
         ax.set_xlabel('Valores', fontsize=12, fontweight='bold')
-        ax.set_title(f'Boxplot - {variable_name}', fontsize=14, fontweight='bold', pad=20)
+        ax.set_title(f'Boxplot com Distribuição de Pontos - {variable_name}',
+                    fontsize=14, fontweight='bold', pad=20)
         ax.grid(axis='x', alpha=0.3)
+        ax.legend(loc='upper right')
 
         # Adiciona informações
         q1 = analysis_result['separatrizes']['quartis']['Q1']
@@ -278,7 +296,7 @@ class ChartGenerator:
         q3 = analysis_result['separatrizes']['quartis']['Q3']
         iqr = analysis_result['dispersao']['intervalo_interquartil']
 
-        text_info = f'Q1: {q1:.2f} | Q2: {q2:.2f} | Q3: {q3:.2f}\nIQR: {iqr:.2f}'
+        text_info = f'Q1: {q1:.2f} | Q2: {q2:.2f} | Q3: {q3:.2f}\nIQR: {iqr:.2f} | n = {len(data_clean)}'
         ax.text(0.02, 0.95, text_info, transform=ax.transAxes, fontsize=10,
                verticalalignment='top',
                bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
