@@ -2,7 +2,8 @@
 Classe Variable - Representa uma variável (coluna) do dataset.
 """
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, List
+from pathlib import Path
 from .variable_types.ivariable_type import IVariableType
 
 
@@ -126,6 +127,68 @@ class Variable:
                     print(f"  {label}: {value:.2f}")
 
         print(f"\n{'='*60}\n")
+
+    def generate_charts(self, output_dir: Path) -> List[Path]:
+        """
+        Gera gráficos para esta variável.
+
+        Args:
+            output_dir: Diretório onde salvar os gráficos
+
+        Returns:
+            Lista de caminhos dos gráficos gerados
+        """
+        from visualization.chart_generator import ChartGenerator
+
+        # Garante que a análise foi feita
+        result = self.analyze()
+
+        generator = ChartGenerator(output_dir)
+        type_name = self.variable_type.name.lower()
+
+        # Sanitiza o nome da variável para nome de arquivo
+        safe_name = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in self.name)
+        safe_name = safe_name.replace(' ', '_')
+
+        if type_name == "nominal":
+            return generator.generate_for_nominal(self.data, safe_name, result)
+        elif type_name == "binária":
+            return generator.generate_for_binary(self.data, safe_name, result)
+        elif type_name == "discreta":
+            return generator.generate_for_discrete(self.data, safe_name, result)
+        elif type_name == "contínua":
+            return generator.generate_for_continuous(self.data, safe_name, result)
+        else:
+            return []
+
+    def export_report(self, output_dir: Path, chart_paths: List[Path] = None) -> Path:
+        """
+        Exporta relatório desta variável.
+
+        Args:
+            output_dir: Diretório onde salvar o relatório
+            chart_paths: Caminhos dos gráficos gerados
+
+        Returns:
+            Caminho do relatório gerado
+        """
+        from export.report_generator import ReportGenerator
+
+        # Garante que a análise foi feita
+        result = self.analyze()
+
+        generator = ReportGenerator(output_dir)
+
+        # Sanitiza o nome da variável
+        safe_name = "".join(c if c.isalnum() or c in (' ', '-', '_') else '_' for c in self.name)
+        safe_name = safe_name.replace(' ', '_')
+
+        return generator.generate_variable_report(
+            safe_name,
+            self.variable_type.name,
+            result,
+            chart_paths or []
+        )
 
     def __repr__(self):
         return f"Variable(name='{self.name}', type='{self.variable_type.name}')"

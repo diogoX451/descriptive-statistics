@@ -48,6 +48,19 @@ def main():
 
         dataset.analyze_all_variables()
 
+        # Exporta gráficos e relatórios
+        print("\n" + "="*60)
+        print("Gerando visualizações e relatórios...")
+        print("="*60)
+
+        try:
+            output_dir = dataset.export_all(generate_charts=True)
+            print(f"\n✨ Visualizações e relatórios salvos em: {output_dir.absolute()}")
+        except Exception as export_error:
+            print(f"\n⚠️  Erro ao gerar visualizações: {export_error}")
+            import traceback
+            traceback.print_exc()
+
     except FileNotFoundError as e:
         print(f"❌ Erro: {e}")
     except ValueError as e:
