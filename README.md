@@ -25,11 +25,13 @@ Este sistema analisa automaticamente qualquer conjunto de dados (CSV ou XLSX) e:
    - Histogramas e boxplots para variáveis numéricas
    - Curvas de densidade KDE para variáveis contínuas
 
-4. **Exporta automaticamente** relatórios completos em Markdown com:
+4. **Exporta automaticamente** relatórios em **PDF profissional**:
+   - Apenas PDFs no output (sem poluir com .png, .md, etc.)
+   - Todas as imagens embutidas diretamente no PDF
    - Tabelas de frequências formatadas
    - Medidas estatísticas organizadas
    - Interpretações automáticas dos resultados
-   - Imagens embutidas das visualizações
+   - Pronto para compartilhar com pessoas não-técnicas
 
 ## 🏗️ Arquitetura
 
@@ -68,15 +70,14 @@ descriptive-statistics/
 │   ├── visualization/         # Geração de gráficos
 │   │   └── chart_generator.py
 │   ├── export/                # Exportação de relatórios
-│   │   └── report_generator.py
+│   │   ├── report_generator.py    # Gerador de Markdown
+│   │   └── pdf_generator.py       # Gerador de PDFs
 │   └── main.py                # Ponto de entrada
 ├── data/                      # Seus arquivos de dados
-├── output/                    # Resultados gerados
+├── output/                    # Resultados (APENAS PDFs)
 │   └── <nome_arquivo>/
-│       ├── *_histograma.png
-│       ├── *_boxplot.png
-│       ├── *_relatorio.md
-│       └── RELATORIO_GERAL.md
+│       ├── *_relatorio.pdf      # Relatórios por variável
+│       └── RELATORIO_GERAL.pdf  # Resumo geral
 ├── pyproject.toml            # Configuração Poetry
 └── README.md                 # Este arquivo
 ```
@@ -108,6 +109,9 @@ poetry install
 - **matplotlib** (3.10.7): Visualizações
 - **seaborn** (0.13.2): Gráficos estatísticos
 - **scipy** (1.16.3): Funções estatísticas avançadas
+- **weasyprint** (66.0): Geração de PDFs
+- **markdown** (3.10): Conversão MD → HTML
+- **beautifulsoup4** (4.14.2): Processamento HTML
 
 ## 🚀 Como Usar
 
@@ -129,9 +133,11 @@ poetry run python src/main.py data/seu_arquivo.xlsx
 2. ✅ Converte números com vírgula decimal (formato brasileiro)
 3. ✅ Classifica cada coluna no tipo apropriado
 4. ✅ Calcula todas as estatísticas relevantes
-5. ✅ Gera gráficos profissionais (300 DPI)
-6. ✅ Exporta relatórios em Markdown
-7. ✅ Salva tudo em `output/<nome_arquivo>/`
+5. ✅ Gera gráficos profissionais (300 DPI) temporariamente
+6. ✅ Cria relatórios em Markdown temporariamente
+7. ✅ Converte tudo para PDFs com imagens embutidas
+8. ✅ Salva **APENAS PDFs** em `output/<nome_arquivo>/`
+9. ✅ Remove arquivos temporários automaticamente
 
 ## 📋 Exemplos
 
@@ -181,21 +187,16 @@ Variável: aprovado (Binária)
 ```
 
 **Arquivos gerados** em `output/pessoas_csv/`:
-- `nome_barras.png` - Gráfico de barras
-- `nome_relatorio.md` - Relatório da variável
-- `idade_histograma.png` - Histograma
-- `idade_boxplot.png` - Boxplot
-- `idade_relatorio.md` - Relatório com todas as medidas
-- `altura_histograma.png` - Histograma com curva KDE
-- `altura_boxplot.png` - Boxplot
-- `altura_relatorio.md` - Relatório completo
-- `cidade_barras.png` - Gráfico de barras
-- `cidade_relatorio.md` - Relatório
-- `aprovado_pizza.png` - Gráfico de pizza
-- `aprovado_barras.png` - Gráfico de barras
-- `aprovado_relatorio.md` - Relatório
-- `_resumo_dataset.png` - Visão geral do dataset
-- `RELATORIO_GERAL.md` - Resumo completo de todas as variáveis
+
+📄 **Apenas PDFs** (com todas as imagens embutidas):
+- `nome_relatorio.pdf` - Relatório da variável nome
+- `idade_relatorio.pdf` - Relatório da variável idade (com histograma + boxplot)
+- `altura_relatorio.pdf` - Relatório da variável altura (com histograma + boxplot)
+- `cidade_relatorio.pdf` - Relatório da variável cidade
+- `aprovado_relatorio.pdf` - Relatório da variável aprovado (com gráficos)
+- `RELATORIO_GERAL.pdf` - **Resumo completo do dataset** ⭐
+
+💡 **Sem poluição**: Não há arquivos .png ou .md soltos! Tudo está embutido nos PDFs.
 
 ### Exemplo 2: Dados com Decimais Brasileiros
 
@@ -321,6 +322,45 @@ Todas as visualizações são geradas em **alta qualidade (300 DPI)** e incluem:
 ### Resumo Geral:
 - Painel com visão geral de todas as variáveis
 
+## 📄 Relatórios PDF Profissionais
+
+Os PDFs gerados são **prontos para compartilhar com pessoas não-técnicas** e incluem:
+
+✅ **Formatação Profissional**:
+- Fonte legível e organizada
+- Cabeçalhos coloridos e hierarquizados
+- Tabelas com cores alternadas para facilitar leitura
+- Imagens centralizadas e em alta qualidade
+
+✅ **Imagens Embutidas**:
+- Todas as visualizações (gráficos, histogramas, boxplots) são **embutidas diretamente no PDF**
+- Não é necessário enviar imagens separadamente
+- Gráficos em alta resolução (300 DPI)
+
+✅ **Conteúdo Completo**:
+- **Relatórios Individuais**: Um PDF por variável com análise completa
+- **Relatório Geral**: PDF resumo com todas as variáveis do dataset
+
+✅ **Pronto para Apresentação**:
+- Layout profissional estilo A4
+- Numeração de páginas automática
+- Quebras de página inteligentes (evita tabelas cortadas)
+
+### Como usar apenas PDFs:
+
+Os PDFs são gerados **automaticamente** junto com os relatórios Markdown. Para compartilhar com outras pessoas:
+
+1. Execute a análise normalmente: `poetry run python src/main.py data/seu_arquivo.csv`
+2. Vá para `output/<nome_arquivo>/`
+3. Compartilhe os arquivos `.pdf` diretamente!
+
+**Exemplo**: Para o arquivo `pessoas.csv`, você pode enviar:
+- `RELATORIO_GERAL.pdf` - Para visão geral
+- `idade_relatorio.pdf` - Para análise detalhada da idade
+- `altura_relatorio.pdf` - Para análise detalhada da altura
+
+💡 **Dica**: Os PDFs contêm todas as imagens embutidas, então você pode enviá-los por email, WhatsApp, ou incluir em apresentações sem se preocupar com arquivos soltos!
+
 ## 🔧 Personalização
 
 ### Adicionar novo tipo de leitor
@@ -404,6 +444,43 @@ O sistema trata automaticamente:
 - Dados ausentes/nulos
 - Colunas vazias
 - Tipos incompatíveis
+
+## ❓ Perguntas Frequentes (FAQ)
+
+### Por que apenas PDFs no output?
+
+O sistema gera **apenas PDFs** na pasta `output/` para manter tudo limpo e organizado:
+
+✅ **Vantagens**:
+- Nenhum arquivo solto (.png, .md) poluindo a pasta
+- Tudo que você precisa está dentro dos PDFs
+- Fácil de compartilhar (um ou poucos arquivos)
+- Imagens embutidas em alta qualidade
+- Profissional e pronto para apresentação
+
+🔧 **Como funciona**:
+1. Sistema gera gráficos e relatórios em pasta temporária
+2. Converte tudo para PDF com imagens embutidas (base64)
+3. Salva PDFs em `output/`
+4. Remove arquivos temporários automaticamente
+
+💡 **Resultado**: Pasta `output/` limpa com apenas PDFs prontos para compartilhar!
+
+### Posso desabilitar a geração de PDFs?
+
+Sim! No arquivo `src/main.py`, altere:
+
+```python
+output_dir = dataset.export_all(generate_charts=True, generate_pdfs=False)
+```
+
+### Os PDFs ficam grandes demais?
+
+Os PDFs são otimizados mas podem ficar entre 150-300 KB dependendo do número de gráficos. Isso é normal para PDFs com imagens de alta qualidade embutidas. São perfeitamente compartilháveis por email.
+
+### Posso customizar o estilo dos PDFs?
+
+Sim! Edite o CSS em `src/export/pdf_generator.py` na variável `REPORT_CSS`. Você pode alterar cores, fontes, tamanhos, etc.
 
 ## 📄 Licença
 

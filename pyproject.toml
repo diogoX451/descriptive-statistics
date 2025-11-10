@@ -1,18 +1,25 @@
 [tool.poetry]
 name = "descriptive-statistics"
 version = "0.1.0"
-description = "Projeto de estatística descritiva"
+description = "Sistema automatizado de análise estatística descritiva com geração de relatórios PDF profissionais"
 authors = ["huakson"]
 readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
+# Análise de dados
 pandas = "^2.3.3"
 numpy = "^2.3.4"
+scipy = "^1.16.3"
+# Visualização
 matplotlib = "^3.10.7"
 seaborn = "^0.13.2"
-scipy = "^1.16.3"
+# Geração de relatórios
+markdown = "^3.10"
+weasyprint = "^66.0"
+beautifulsoup4 = "^4.14.2"
+pygments = "^2.19.2"
 
 
 [build-system]
