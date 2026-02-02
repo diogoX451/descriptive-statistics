@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resultados</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-badge">Resultados</div>
+        <h1>Relatorios Gerados</h1>
+        <p>Baixe os PDFs e CSVs sinteticos gerados.</p>
+      </header>
+
+      <div class="card">
+        <h2>Arquivos</h2>
+        <ul class="file-list">
+          {% for file in files %}
+          <li>
+            <a href="/download/{{ run_id }}/{{ file }}">{{ file }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="actions">
+          <a class="cta" href="/">Nova analise</a>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>

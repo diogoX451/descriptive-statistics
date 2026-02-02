@@ -126,6 +126,13 @@ class Variable:
                     label = key.replace('_', ' ').capitalize()
                     print(f"  {label}: {value:.2f}")
 
+        # Forma da distribuição
+        if 'forma' in result and result['forma'].get('assimetria') is not None:
+            forma = result['forma']
+            print("\n📈 Forma da Distribuição:")
+            print(f"  Assimetria: {forma.get('assimetria'):.4f}")
+            print(f"  Curtose (excesso): {forma.get('curtose_excesso'):.4f}")
+
         print(f"\n{'='*60}\n")
 
     def generate_charts(self, output_dir: Path) -> List[Path]:

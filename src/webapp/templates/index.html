@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Descriptive Statistics - Web</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-badge">Analise Estatistica Descritiva</div>
+        <h1>Web Console</h1>
+        <p>Carregue seus dados, configure analises e gere relatorios em PDF.</p>
+      </header>
+
+      {% if error %}
+      <div class="alert">{{ error }}</div>
+      {% endif %}
+
+      <form class="card" action="/analyze" method="post" enctype="multipart/form-data">
+        <section class="section">
+          <h2>1. Arquivo</h2>
+          <input type="file" name="data_file" accept=".csv,.xlsx" required />
+        </section>
+
+        <section class="section">
+          <h2>2. Analises</h2>
+          <div class="grid">
+            <label><input type="checkbox" name="generate_charts" checked /> Gerar graficos</label>
+            <label><input type="checkbox" name="generate_pdfs" checked /> Gerar PDFs</label>
+            <label><input type="checkbox" name="generate_bivariate" checked /> Analise bivariada</label>
+            <label><input type="checkbox" name="detect_artificial" checked /> Detector artificial</label>
+            <label><input type="checkbox" name="generate_final_report" checked /> Relatorio final</label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>3. Gerador Univariado</h2>
+          <div class="grid">
+            <label><input type="checkbox" name="uni_enabled" /> Ativar</label>
+            <label>Variavel <input type="text" name="uni_var" placeholder="coluna" /></label>
+            <label>N <input type="number" name="uni_n" min="0" /></label>
+            <label>Metodo
+              <select name="uni_method">
+                <option value="fit">fit</option>
+                <option value="bootstrap">bootstrap</option>
+              </select>
+            </label>
+            <label>Distribuicao <input type="text" name="uni_dist" placeholder="norm, expon..." /></label>
+            <label>Media <input type="text" name="uni_mean" placeholder="opcional" /></label>
+            <label>Desvio <input type="text" name="uni_std" placeholder="opcional" /></label>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>4. Gerador Bivariado</h2>
+          <div class="grid">
+            <label><input type="checkbox" name="bi_enabled" /> Ativar</label>
+            <label>X <input type="text" name="bi_x" placeholder="coluna X" /></label>
+            <label>Y <input type="text" name="bi_y" placeholder="coluna Y" /></label>
+            <label>N <input type="number" name="bi_n" min="0" /></label>
+            <label>Correlacao alvo <input type="text" name="bi_corr" placeholder="0.8" /></label>
+            <label>Modo
+              <select name="bi_mode">
+                <option value="copula">copula</option>
+                <option value="normal">normal</option>
+              </select>
+            </label>
+            <label>Dist X <input type="text" name="bi_dist_x" placeholder="norm" /></label>
+            <label>Dist Y <input type="text" name="bi_dist_y" placeholder="norm" /></label>
+          </div>
+        </section>
+
+        <button class="cta" type="submit">Executar Analise</button>
+      </form>
+    </main>
+  </body>
+</html>

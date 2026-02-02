@@ -3,7 +3,7 @@ Sistema de Análise de Estatística Descritiva
 Arquitetura refatorada com padrões Factory e Strategy
 """
 import os
-import sys
+import argparse
 from data_loading.factory import create_reader, load_implementations
 from domain.dataset import DataSet
 
@@ -13,10 +13,36 @@ def main():
 
     load_implementations()
 
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-    else:
-        file_path = "teste.csv"
+    parser = argparse.ArgumentParser(description="Sistema de Estatística Descritiva")
+    parser.add_argument("file", nargs="?", default="teste.csv", help="Arquivo CSV/XLSX")
+    parser.add_argument("--no-charts", action="store_true", help="Não gerar gráficos")
+    parser.add_argument("--no-pdfs", action="store_true", help="Não gerar PDFs")
+    parser.add_argument("--no-bivariate", action="store_true", help="Não gerar análise bivariada")
+    parser.add_argument("--no-detector", action="store_true", help="Não executar detector de dados artificiais")
+    parser.add_argument("--no-final-report", action="store_true", help="Não gerar relatório final consolidado")
+
+    # Gerador univariado
+    parser.add_argument("--generate-univariate", action="store_true", help="Gerar dados sintéticos univariados")
+    parser.add_argument("--univariate-var", type=str, help="Nome da variável para gerar")
+    parser.add_argument("--univariate-n", type=int, default=0, help="Quantidade de dados sintéticos")
+    parser.add_argument("--univariate-method", choices=["fit", "bootstrap"], default="fit")
+    parser.add_argument("--univariate-dist", type=str, default=None)
+    parser.add_argument("--univariate-mean", type=float, default=None)
+    parser.add_argument("--univariate-std", type=float, default=None)
+
+    # Gerador bivariado
+    parser.add_argument("--generate-bivariate", action="store_true", help="Gerar dados sintéticos bivariados")
+    parser.add_argument("--bivariate-vars", nargs=2, help="Nomes das variáveis (X Y)")
+    parser.add_argument("--bivariate-n", type=int, default=0, help="Quantidade de pares sintéticos")
+    parser.add_argument("--bivariate-corr", type=float, default=None, help="Correlação alvo")
+    parser.add_argument("--bivariate-mode", choices=["normal", "copula"], default="copula")
+    parser.add_argument("--bivariate-dist-x", type=str, default=None)
+    parser.add_argument("--bivariate-dist-y", type=str, default=None)
+
+    args = parser.parse_args()
+    file_path = args.file
+
+    if file_path == "teste.csv":
         print("💡 Dica: Você pode passar um arquivo como argumento:")
         print("   python src/main.py seu_arquivo.csv\n")
 
@@ -43,6 +69,10 @@ def main():
         print(f"📊 Dimensões: {df.shape[0]} linhas x {df.shape[1]} colunas")
 
         dataset = DataSet(df, name=os.path.basename(file_path))
+        dataset.generation_reports["execucao"] = {
+            "arquivo": file_path,
+            "args": vars(args)
+        }
 
         dataset.print_summary()
 
@@ -53,8 +83,37 @@ def main():
         print("Gerando visualizações e relatórios...")
         print("="*60)
 
+        # Geração de dados sintéticos (opcional)
+        if args.generate_univariate and args.univariate_var and args.univariate_n > 0:
+            dataset.generate_univariate_synthetic(
+                args.univariate_var,
+                n=args.univariate_n,
+                method=args.univariate_method,
+                dist_name=args.univariate_dist,
+                mean=args.univariate_mean,
+                std=args.univariate_std
+            )
+
+        if args.generate_bivariate and args.bivariate_vars and args.bivariate_n > 0:
+            x_name, y_name = args.bivariate_vars
+            dataset.generate_bivariate_synthetic(
+                x_name,
+                y_name,
+                n=args.bivariate_n,
+                target_corr=args.bivariate_corr,
+                mode=args.bivariate_mode,
+                dist_x=args.bivariate_dist_x,
+                dist_y=args.bivariate_dist_y
+            )
+
         try:
-            output_dir = dataset.export_all(generate_charts=True)
+            output_dir = dataset.export_all(
+                generate_charts=not args.no_charts,
+                generate_pdfs=not args.no_pdfs,
+                generate_bivariate=not args.no_bivariate,
+                detect_artificial=not args.no_detector,
+                generate_final_report=not args.no_final_report
+            )
             print(f"\n✨ Visualizações e relatórios salvos em: {output_dir.absolute()}")
         except Exception as export_error:
             print(f"\n⚠️  Erro ao gerar visualizações: {export_error}")

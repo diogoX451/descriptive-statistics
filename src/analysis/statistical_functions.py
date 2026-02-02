@@ -4,6 +4,7 @@ Funções estatísticas puras para cálculo de métricas.
 import pandas as pd
 import numpy as np
 from typing import Dict, Optional, Any
+from scipy import stats
 
 
 def calc_frequencies(series: pd.Series, bins: Optional[int] = None) -> pd.DataFrame:
@@ -167,6 +168,33 @@ def calc_dispersion(series: pd.Series) -> Dict[str, Optional[float]]:
     media = series_clean.mean()
     if media != 0:
         result['coeficiente_variacao'] = float((series_clean.std() / media) * 100)
+
+    return result
+
+
+def calc_shape_metrics(series: pd.Series) -> Dict[str, Optional[float]]:
+    """
+    Calcula assimetria e curtose.
+
+    Returns:
+        Dicionário com assimetria, curtose (excesso) e curtose total
+    """
+    series_clean = series.dropna()
+
+    result = {
+        'assimetria': None,
+        'curtose_excesso': None,
+        'curtose': None
+    }
+
+    if series_clean.empty or not pd.api.types.is_numeric_dtype(series_clean):
+        return result
+
+    skew = float(stats.skew(series_clean, bias=False))
+    kurt_excess = float(stats.kurtosis(series_clean, fisher=True, bias=False))
+    result['assimetria'] = skew
+    result['curtose_excesso'] = kurt_excess
+    result['curtose'] = kurt_excess + 3
 
     return result
 

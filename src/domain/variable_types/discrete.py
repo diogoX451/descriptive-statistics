@@ -8,8 +8,10 @@ from analysis.statistical_functions import (
     calc_frequencies,
     calc_central_tendency,
     calc_separatrizes,
-    calc_dispersion
+    calc_dispersion,
+    calc_shape_metrics
 )
+from analysis.distribution_fitting import fit_distributions
 
 
 class DiscreteType(IVariableType):
@@ -47,5 +49,11 @@ class DiscreteType(IVariableType):
 
         # Dispersão
         result['dispersao'] = calc_dispersion(data)
+
+        # Forma da distribuição
+        result['forma'] = calc_shape_metrics(data)
+
+        # Ajuste de distribuições
+        result['distribuicoes'] = fit_distributions(data)
 
         return result
