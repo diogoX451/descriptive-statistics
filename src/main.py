@@ -1,12 +1,12 @@
 """
 Sistema de Análise de Estatística Descritiva
-Arquitetura refatorada com padrões Factory e Strategy
 """
 import os
 import sys
 from data_loading.factory import create_reader, load_implementations
 from domain.dataset import DataSet
-
+from analysis.bivariate_analysis import BivariateAnalysis
+from analysis.data_generator import DataGenerator
 
 def main():
     """Função principal do sistema."""
@@ -27,49 +27,49 @@ def main():
     _, extensao = os.path.splitext(file_path)
     file_type = extensao[1:].lower()
 
-    if not file_type:
-        print("❌ Erro: Arquivo sem extensão.")
-        return
-
-    print(f"\n🔄 Carregando arquivo: {file_path}")
-    print(f"📄 Tipo de arquivo: {file_type.upper()}")
-
     try:
         reader = create_reader(file_type, file_path)
-
         df = reader.read()
 
         print(f"✅ Arquivo carregado com sucesso!")
-        print(f"📊 Dimensões: {df.shape[0]} linhas x {df.shape[1]} colunas")
-
         dataset = DataSet(df, name=os.path.basename(file_path))
-
         dataset.print_summary()
-
         dataset.analyze_all_variables()
 
-        # Exporta gráficos e relatórios
+        # ---  BIVARIADA E GERADOR ---
+        print("\n" + "="*60)
+        print("🚀 NOVAS FUNCIONALIDADES: VERSÃO FINAL")
+        print("="*60)
+        
+        colunas_num = df.select_dtypes(include=['number']).columns
+        
+        # 1. Teste de Correlação e Regressão (Bivariada)
+        if len(colunas_num) >= 2:
+            c1, c2 = colunas_num[0], colunas_num[1]
+            relacao = BivariateAnalysis.analyze_relation(df, c1, c2)
+            print(f"📈 Relação entre {c1} e {c2}:")
+            print(f"   - Correlação Pearson: {relacao['pearson']:.4f}")
+            print(f"   - Regressão: {relacao['regressao']['formula']}")
+        
+        # 2. Teste do Gerador Univariado
+        if not colunas_num.empty:
+            print(f"\n🧬 Gerando dados artificiais baseados em '{colunas_num[0]}':")
+            novos_dados = DataGenerator.generate_univariate(df[colunas_num[0]], n_samples=5)
+            print(f"   Amostra gerada: {novos_dados}")
+
+        # Exporta Gráficos e Relatórios
+
         print("\n" + "="*60)
         print("Gerando visualizações e relatórios...")
         print("="*60)
 
-        try:
-            output_dir = dataset.export_all(generate_charts=True)
-            print(f"\n✨ Visualizações e relatórios salvos em: {output_dir.absolute()}")
-        except Exception as export_error:
-            print(f"\n⚠️  Erro ao gerar visualizações: {export_error}")
-            import traceback
-            traceback.print_exc()
+        output_dir = dataset.export_all(generate_charts=True)
+        print(f"\n✨ Resultados salvos em: {output_dir.absolute()}")
 
-    except FileNotFoundError as e:
-        print(f"❌ Erro: {e}")
-    except ValueError as e:
-        print(f"❌ Erro: {e}")
     except Exception as e:
         print(f"❌ Erro inesperado: {e}")
         import traceback
         traceback.print_exc()
-
 
 if __name__ == "__main__":
     main()
