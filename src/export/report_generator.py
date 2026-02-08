@@ -44,7 +44,7 @@ class ReportGenerator:
 
             # Frequências
             if 'frequencias' in analysis_result:
-                f.write("## 📊 Distribuição de Frequências\n\n")
+                f.write("##  Distribuição de Frequências\n\n")
                 freq_df = analysis_result['frequencias']
 
                 f.write("| Valor | Freq. Absoluta | Freq. Relativa | Freq. Acumulada |\n")
@@ -66,7 +66,7 @@ class ReportGenerator:
 
             # Moda (para nominais e binárias)
             if 'moda' in analysis_result and 'tendencia_central' not in analysis_result:
-                f.write("## 📈 Medida de Tendência Central\n\n")
+                f.write("##  Medida de Tendência Central\n\n")
                 moda = analysis_result['moda']
                 if isinstance(moda, list):
                     f.write(f"**Moda:** {', '.join(map(str, moda))}\n\n")
@@ -75,14 +75,14 @@ class ReportGenerator:
 
             # Proporções (para binárias)
             if 'proporcoes' in analysis_result:
-                f.write("## 📊 Proporções\n\n")
+                f.write("##  Proporções\n\n")
                 for key, value in analysis_result['proporcoes'].items():
                     f.write(f"- **{key}:** {value}\n")
                 f.write("\n")
 
             # Tendência Central (para numéricas)
             if 'tendencia_central' in analysis_result:
-                f.write("## 📈 Medidas de Tendência Central\n\n")
+                f.write("##  Medidas de Tendência Central\n\n")
                 tc = analysis_result['tendencia_central']
 
                 f.write("| Medida | Valor |\n")
@@ -105,7 +105,7 @@ class ReportGenerator:
                 sep = analysis_result['separatrizes']
 
                 if sep.get('quartis'):
-                    f.write("## 📏 Separatrizes\n\n")
+                    f.write("##  Separatrizes\n\n")
                     f.write("### Quartis\n\n")
                     f.write("| Quartil | Valor | Interpretação |\n")
                     f.write("|---------|-------|---------------|\n")
@@ -150,13 +150,13 @@ class ReportGenerator:
                 f.write("\n")
 
             # Interpretação
-            f.write("## 💡 Interpretação\n\n")
+            f.write("##  Interpretação\n\n")
             f.write(self._generate_interpretation(variable_type, analysis_result))
             f.write("\n")
 
             # Gráficos
             if chart_paths:
-                f.write("## 📊 Visualizações\n\n")
+                f.write("##  Visualizações\n\n")
                 for chart_path in chart_paths:
                     chart_name = chart_path.stem.replace(f"{variable_name}_", "").replace("_", " ").title()
                     f.write(f"### {chart_name}\n\n")
@@ -247,7 +247,7 @@ class ReportGenerator:
             f.write("---\n\n")
 
             # Resumo Geral
-            f.write("## 📊 Resumo Geral\n\n")
+            f.write("##  Resumo Geral\n\n")
             f.write(f"- **Total de variáveis:** {len(variables_summary)}\n")
 
             if variables_summary:
@@ -266,7 +266,7 @@ class ReportGenerator:
                 f.write("\n")
 
             # Tabela de Variáveis
-            f.write("## 📋 Detalhamento das Variáveis\n\n")
+            f.write("##  Detalhamento das Variáveis\n\n")
             f.write("| Variável | Tipo | Total Valores | Valores Únicos | Valores Faltantes |\n")
             f.write("|----------|------|---------------|----------------|-------------------|\n")
 
@@ -278,11 +278,11 @@ class ReportGenerator:
 
             # Gráfico Resumo
             if summary_chart_path and summary_chart_path.exists():
-                f.write("## 📊 Visualização Geral\n\n")
+                f.write("##  Visualização Geral\n\n")
                 f.write(f"![Resumo do Dataset]({summary_chart_path.name})\n\n")
 
             # Links para relatórios individuais
-            f.write("## 📄 Relatórios Individuais\n\n")
+            f.write("##  Relatórios Individuais\n\n")
             for var in variables_summary:
                 var_name = var['nome']
                 f.write(f"- [{var_name}]({var_name}_relatorio.md)\n")

@@ -69,7 +69,7 @@ class DataSet:
         if variable:
             variable.print_analysis()
         else:
-            print(f"❌ Variável '{name}' não encontrada.")
+            print(f" Variável '{name}' não encontrada.")
 
     def analyze_all_variables(self):
         """Analisa e imprime os resultados de todas as variáveis."""
@@ -145,7 +145,7 @@ class DataSet:
         temp_dir = Path(tempfile.mkdtemp(prefix="stats_"))
 
         try:
-            print(f"\n📂 Gerando análises...")
+            print(f"\n Gerando análises...")
 
             # Gera análises para cada variável no diretório temporário
             for i, variable in enumerate(self.variables, 1):
@@ -155,15 +155,15 @@ class DataSet:
                 if generate_charts:
                     try:
                         chart_paths = variable.generate_charts(temp_dir)
-                        print(f"  ✅ {len(chart_paths)} gráfico(s) gerado(s)")
+                        print(f"   {len(chart_paths)} gráfico(s) gerado(s)")
                     except Exception as e:
-                        print(f"  ⚠️  Erro ao gerar gráficos: {e}")
+                        print(f"    Erro ao gerar gráficos: {e}")
 
                 try:
                     report_path = variable.export_report(temp_dir, chart_paths)
-                    print(f"  ✅ Relatório MD gerado")
+                    print(f"   Relatório MD gerado")
                 except Exception as e:
-                    print(f"  ⚠️  Erro ao gerar relatório: {e}")
+                    print(f"    Erro ao gerar relatório: {e}")
 
             # Gera gráfico resumo do dataset
             summary_chart_path = None
@@ -172,9 +172,9 @@ class DataSet:
                     chart_gen = ChartGenerator(temp_dir)
                     variables_summary = [var.get_summary() for var in self.variables]
                     summary_chart_path = chart_gen.generate_summary_chart(self.name, variables_summary)
-                    print(f"\n✅ Gráfico resumo gerado")
+                    print(f"\n Gráfico resumo gerado")
                 except Exception as e:
-                    print(f"\n⚠️  Erro ao gerar gráfico resumo: {e}")
+                    print(f"\n Erro ao gerar gráfico resumo: {e}")
 
             # Gera relatório geral
             try:
@@ -185,31 +185,31 @@ class DataSet:
                     variables_summary,
                     summary_chart_path
                 )
-                print(f"✅ Relatório geral MD gerado")
+                print(f" Relatório geral MD gerado")
             except Exception as e:
-                print(f"⚠️  Erro ao gerar relatório geral: {e}")
+                print(f"  Erro ao gerar relatório geral: {e}")
 
             # Gera PDFs de todos os relatórios Markdown
             if generate_pdfs:
-                print(f"\n📄 Convertendo para PDF com imagens embutidas...")
+                print(f"\n Convertendo para PDF com imagens embutidas...")
                 try:
                     pdf_gen = PDFGenerator(final_output_dir)  # PDFs vão direto para output
                     pdf_files = pdf_gen.generate_all_pdfs(temp_dir)  # Lê MDs do temp
-                    print(f"✅ {len(pdf_files)} PDF(s) gerado(s)")
+                    print(f" {len(pdf_files)} PDF(s) gerado(s)")
                 except Exception as e:
-                    print(f"⚠️  Erro ao gerar PDFs: {e}")
+                    print(f"  Erro ao gerar PDFs: {e}")
 
-            print(f"\n🎉 Exportação concluída!")
-            print(f"📄 PDFs salvos em: {final_output_dir.absolute()}")
-            print(f"💡 Apenas PDFs foram mantidos (com imagens embutidas)\n")
+            print(f"\n Exportação concluída!")
+            print(f" PDFs salvos em: {final_output_dir.absolute()}")
+            print(f" Apenas PDFs foram mantidos (com imagens embutidas)\n")
 
         finally:
             # Limpa diretório temporário
             try:
                 shutil.rmtree(temp_dir)
-                print(f"🧹 Arquivos temporários removidos")
+                print(f" Arquivos temporários removidos")
             except Exception as e:
-                print(f"⚠️  Aviso: não foi possível remover temporários: {e}")
+                print(f" Aviso: não foi possível remover temporários: {e}")
 
         return final_output_dir
 

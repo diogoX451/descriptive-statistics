@@ -80,33 +80,33 @@ class Variable:
 
         # Frequências
         if 'frequencias' in result:
-            print("\n📊 Frequências:")
+            print("\n Frequências:")
             print(result['frequencias'].to_string(index=False))
 
         # Moda (para variáveis categóricas)
         if 'moda' in result and 'tendencia_central' not in result:
-            print(f"\n📈 Moda: {result['moda']}")
+            print(f"\n Moda: {result['moda']}")
 
         # Proporções (para binárias)
         if 'proporcoes' in result:
-            print("\n📊 Proporções:")
+            print("\n Proporções:")
             for key, value in result['proporcoes'].items():
                 print(f"  {key}: {value}")
 
         # Mediana (para ordinais)
         if 'mediana' in result and 'tendencia_central' not in result:
-            print(f"\n📈 Mediana: {result['mediana']}")
+            print(f"\n Mediana: {result['mediana']}")
 
         # Tendência central (para numéricas)
         if 'tendencia_central' in result:
-            print("\n📈 Tendência Central:")
+            print("\n Tendência Central:")
             for key, value in result['tendencia_central'].items():
                 if value is not None:
                     print(f"  {key.capitalize()}: {value}")
 
         # Separatrizes
         if 'separatrizes' in result:
-            print("\n📏 Separatrizes:")
+            print("\n Separatrizes:")
 
             if result['separatrizes'].get('quartis'):
                 print("  Quartis:")
@@ -120,7 +120,7 @@ class Variable:
 
         # Dispersão
         if 'dispersao' in result:
-            print("\n📐 Dispersão:")
+            print("\n Dispersão:")
             for key, value in result['dispersao'].items():
                 if value is not None:
                     label = key.replace('_', ' ').capitalize()
