@@ -10,6 +10,7 @@ package-mode = false
 python = "^3.12"
 # Análise de dados
 pandas = "^2.3.3"
+openpyxl = "^3.1.5"
 numpy = "^2.3.4"
 scipy = "^1.16.3"
 # Visualização

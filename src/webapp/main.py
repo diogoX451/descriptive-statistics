@@ -36,11 +36,11 @@ def index(request: Request):
 async def analyze(
     request: Request,
     data_file: UploadFile = File(...),
-    generate_charts: bool = Form(True),
-    generate_pdfs: bool = Form(True),
-    generate_bivariate: bool = Form(True),
-    detect_artificial: bool = Form(True),
-    generate_final_report: bool = Form(True),
+    generate_charts: bool = Form(False),
+    generate_pdfs: bool = Form(False),
+    generate_bivariate: bool = Form(False),
+    detect_artificial: bool = Form(False),
+    generate_final_report: bool = Form(False),
     # univariate generator
     uni_enabled: bool = Form(False),
     uni_var: str = Form(""),
@@ -91,7 +91,14 @@ async def analyze(
     run_id = uuid4().hex[:8]
     upload_dir = OUTPUT_BASE / f"uploads_{run_id}"
     upload_dir.mkdir(parents=True, exist_ok=True)
-    upload_path = upload_dir / data_file.filename
+    safe_upload_name = Path(data_file.filename).name
+    if not safe_upload_name:
+        return templates.TemplateResponse(
+            "index.html",
+            {"request": request, "error": "Nome de arquivo inválido."},
+            status_code=400,
+        )
+    upload_path = upload_dir / safe_upload_name
 
     with open(upload_path, "wb") as f:
         f.write(await data_file.read())
@@ -99,7 +106,7 @@ async def analyze(
     try:
         reader = create_reader(extension, str(upload_path))
         df = reader.read()
-        dataset_name = f"{Path(data_file.filename).stem}_{run_id}"
+        dataset_name = f"{Path(safe_upload_name).stem}_{run_id}"
         dataset = DataSet(df, name=dataset_name)
 
         # optional generators
@@ -194,10 +201,11 @@ async def analyze(
 
 @app.get("/download/{run_id}/{filename}")
 def download(run_id: str, filename: str):
+    safe_run_id = Path(run_id).name
     safe_name = Path(filename).name
-    output_dir = OUTPUT_BASE / run_id
+    output_dir = OUTPUT_BASE / safe_run_id
     file_path = output_dir / safe_name
-    if not file_path.exists():
+    if not _is_within(output_dir, file_path) or not file_path.exists():
         return RedirectResponse(url="/")
     return FileResponse(file_path)
 
@@ -217,3 +225,11 @@ def _to_float_or_none(value: str):
         return float(value)
     except Exception:
         return None
+
+
+def _is_within(base: Path, target: Path) -> bool:
+    try:
+        target.resolve().relative_to(base.resolve())
+        return True
+    except Exception:
+        return False

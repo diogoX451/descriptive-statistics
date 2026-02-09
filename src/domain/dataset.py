@@ -307,7 +307,6 @@ class DataSet:
         import shutil
         from visualization.chart_generator import ChartGenerator
         from export.report_generator import ReportGenerator
-        from export.pdf_generator import PDFGenerator
 
         # Define diretório de output final
         if output_base_dir is None:
@@ -423,6 +422,7 @@ class DataSet:
             if generate_pdfs:
                 print(f"\n📄 Convertendo para PDF com imagens embutidas...")
                 try:
+                    from export.pdf_generator import PDFGenerator
                     pdf_gen = PDFGenerator(final_output_dir)  # PDFs vão direto para output
                     pdf_files = pdf_gen.generate_all_pdfs(temp_dir)  # Lê MDs do temp
                     print(f"✅ {len(pdf_files)} PDF(s) gerado(s)")
@@ -430,8 +430,11 @@ class DataSet:
                     print(f"⚠️  Erro ao gerar PDFs: {e}")
 
             print(f"\n🎉 Exportação concluída!")
-            print(f"📄 PDFs salvos em: {final_output_dir.absolute()}")
-            print(f"💡 Apenas PDFs foram mantidos (com imagens embutidas)\n")
+            if generate_pdfs:
+                print(f"📄 PDFs salvos em: {final_output_dir.absolute()}")
+                print(f"💡 Apenas PDFs foram mantidos (com imagens embutidas)\n")
+            else:
+                print(f"📂 Saída salva em: {final_output_dir.absolute()}\n")
 
             # Salva dados sintéticos, se existirem
             if self.synthetic_data:

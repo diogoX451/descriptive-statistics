@@ -69,17 +69,34 @@ class CSVReader(IDataReader):
             # Verifica se a coluna é object (texto)
             if df[col].dtype == 'object':
                 try:
-                    # Tenta converter substituindo vírgula por ponto
-                    # Remove aspas se existirem
-                    converted = df[col].astype(str).str.replace(',', '.', regex=False)
+                    original = df[col]
+                    converted = original.astype(str).str.strip()
+                    converted = converted.str.replace('"', '', regex=False).str.replace("'", "", regex=False)
+                    converted = converted.str.replace(' ', '', regex=False)
+                    converted = converted.replace({'': None, 'nan': None, 'None': None, 'NaN': None})
+
+                    # Caso brasileiro com separador de milhar e decimal:
+                    # "1.000,50" -> "1000.50"
+                    mask_has_dot_comma = converted.str.contains('.', regex=False, na=False) & converted.str.contains(',', regex=False, na=False)
+                    converted.loc[mask_has_dot_comma] = (
+                        converted.loc[mask_has_dot_comma]
+                        .str.replace('.', '', regex=False)
+                        .str.replace(',', '.', regex=False)
+                    )
+
+                    # Caso apenas vírgula decimal:
+                    # "10,25" -> "10.25"
+                    mask_only_comma = converted.str.contains(',', regex=False, na=False) & ~mask_has_dot_comma
+                    converted.loc[mask_only_comma] = converted.loc[mask_only_comma].str.replace(',', '.', regex=False)
+
                     # Tenta converter para float
                     converted_float = pd.to_numeric(converted, errors='coerce')
 
                     # Se pelo menos 50% foi convertido com sucesso, assume que é numérico
                     valid_count = converted_float.notna().sum()
-                    total_count = len(converted_float)
+                    total_count = int(original.notna().sum())
 
-                    if valid_count / total_count >= 0.5:
+                    if total_count > 0 and (valid_count / total_count) >= 0.5:
                         df[col] = converted_float
                 except:
                     # Se der erro, mantém a coluna original

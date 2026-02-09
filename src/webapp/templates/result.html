@@ -10,12 +10,20 @@
     <main class="page">
       <header class="hero">
         <div class="hero-badge">Resultados</div>
-        <h1>Relatorios Gerados</h1>
-        <p>Baixe os PDFs e CSVs sinteticos gerados.</p>
+        <h1>Arquivos gerados</h1>
+        <p>Baixe relatorios e artefatos da execucao atual.</p>
+        <div class="hero-meta">
+          <span>Execucao: {{ run_id }}</span>
+          <span>Total: {{ files|length }} arquivo(s)</span>
+        </div>
       </header>
 
-      <div class="card">
-        <h2>Arquivos</h2>
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Downloads</h2>
+          <p>Clique para baixar cada arquivo individualmente.</p>
+        </div>
+
         <ul class="file-list">
           {% for file in files %}
           <li>
@@ -23,10 +31,11 @@
           </li>
           {% endfor %}
         </ul>
+
         <div class="actions">
           <a class="cta" href="/">Nova analise</a>
         </div>
-      </div>
+      </section>
     </main>
   </body>
 </html>

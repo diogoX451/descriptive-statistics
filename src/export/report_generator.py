@@ -405,7 +405,10 @@ class ReportGenerator:
             f.write("## 📄 Relatórios Individuais\n\n")
             for var in variables_summary:
                 var_name = var["nome"]
-                f.write(f"- [{var_name}]({var_name}_relatorio.md)\n")
+                safe_name = "".join(
+                    c if c.isalnum() or c in (" ", "-", "_") else "_" for c in var_name
+                ).replace(" ", "_")
+                f.write(f"- [{var_name}]({safe_name}_relatorio.md)\n")
 
             f.write("\n---\n\n")
             f.write(
