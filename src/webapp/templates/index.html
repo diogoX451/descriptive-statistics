@@ -72,6 +72,31 @@
           </div>
         </section>
 
+        <section class="section">
+          <h2>5. Consultas Parametrizadas</h2>
+          <div class="grid">
+            <label><input type="checkbox" name="binom_enabled" /> Binomial</label>
+            <label>Coluna <input type="text" name="binom_col" placeholder="sexo" /></label>
+            <label>n <input type="number" name="binom_n" min="0" /></label>
+            <label>k <input type="number" name="binom_k" min="0" /></label>
+            <label>Sucesso (opcional) <input type="text" name="binom_success" placeholder="masculino" /></label>
+          </div>
+          <div class="grid">
+            <label><input type="checkbox" name="normal_enabled" /> Normal (intervalo)</label>
+            <label>Coluna <input type="text" name="normal_col" placeholder="peso" /></label>
+            <label>Min <input type="text" name="normal_min" placeholder="400" /></label>
+            <label>Max <input type="text" name="normal_max" placeholder="500" /></label>
+          </div>
+          <div class="grid">
+            <label>Correlacoes (uma por linha: X,Y)</label>
+            <textarea name="corr_pairs" rows="3" placeholder="peso,tamanho&#10;idade_mae,peso_bebe"></textarea>
+          </div>
+          <div class="grid">
+            <label>Regressoes (uma por linha: X,Y,X0)</label>
+            <textarea name="regress_pairs" rows="3" placeholder="peso,tamanho,1200&#10;idade_mae,peso_bebe,60"></textarea>
+          </div>
+        </section>
+
         <button class="cta" type="submit">Executar Analise</button>
       </form>
     </main>

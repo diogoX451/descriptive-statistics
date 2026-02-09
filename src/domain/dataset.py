@@ -29,6 +29,7 @@ class DataSet:
         self.artificial_data_report: Optional[Dict[str, Any]] = None
         self.generation_reports: Dict[str, Any] = {}
         self.synthetic_data: List[Dict[str, Any]] = []
+        self.custom_queries: Dict[str, Any] = {}
 
         self._create_variables()
 
@@ -159,6 +160,95 @@ class DataSet:
             "data": synthetic
         })
         return synthetic, meta
+
+    def run_custom_queries(self, queries: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Executa consultas parametrizadas (binomial, normal, correlação e regressão).
+        """
+        from analysis.custom_queries import (
+            binomial_probability,
+            normal_interval_probability,
+            correlation_for_pair,
+            regression_with_prediction,
+        )
+
+        results: Dict[str, Any] = {}
+
+        binom = queries.get("binomial")
+        if binom:
+            var = self.get_variable(binom.get("col", ""))
+            if var:
+                results["binomial"] = binomial_probability(
+                    var.data,
+                    n=int(binom["n"]),
+                    k=int(binom["k"]),
+                    success_value=binom.get("success_value"),
+                )
+                results["binomial"]["col"] = var.name
+            else:
+                results["binomial"] = {"error": "Variável binomial não encontrada."}
+
+        normal = queries.get("normal_interval")
+        if normal:
+            var = self.get_variable(normal.get("col", ""))
+            if var:
+                results["normal_interval"] = normal_interval_probability(
+                    var.data,
+                    a=float(normal["a"]),
+                    b=float(normal["b"]),
+                )
+                results["normal_interval"]["col"] = var.name
+            else:
+                results["normal_interval"] = {"error": "Variável normal não encontrada."}
+
+        corr_pairs = queries.get("correlations", [])
+        if corr_pairs:
+            corr_results = []
+            for pair in corr_pairs:
+                x_var = self.get_variable(pair.get("x", ""))
+                y_var = self.get_variable(pair.get("y", ""))
+                if not x_var or not y_var:
+                    corr_results.append({
+                        "x": pair.get("x"),
+                        "y": pair.get("y"),
+                        "error": "Variáveis não encontradas."
+                    })
+                    continue
+                corr = correlation_for_pair(x_var.data, y_var.data)
+                corr_results.append({
+                    "x": x_var.name,
+                    "y": y_var.name,
+                    "correlacao": corr
+                })
+            results["correlations"] = corr_results
+
+        regress_pairs = queries.get("regressions", [])
+        if regress_pairs:
+            reg_results = []
+            for pair in regress_pairs:
+                x_var = self.get_variable(pair.get("x", ""))
+                y_var = self.get_variable(pair.get("y", ""))
+                if not x_var or not y_var:
+                    reg_results.append({
+                        "x": pair.get("x"),
+                        "y": pair.get("y"),
+                        "error": "Variáveis não encontradas."
+                    })
+                    continue
+                reg = regression_with_prediction(
+                    x_var.data,
+                    y_var.data,
+                    float(pair.get("x0")),
+                )
+                reg_results.append({
+                    "x": x_var.name,
+                    "y": y_var.name,
+                    "regressao": reg,
+                })
+            results["regressions"] = reg_results
+
+        self.custom_queries = results
+        return results
 
     def get_summary(self) -> Dict[str, Any]:
         """
@@ -322,7 +412,8 @@ class DataSet:
                         bivariate_results,
                         artificial_report or {},
                         self.generation_reports,
-                        summary_chart_path
+                        summary_chart_path,
+                        self.custom_queries
                     )
                     print(f"✅ Relatório final MD gerado")
                 except Exception as e:

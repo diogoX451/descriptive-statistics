@@ -39,6 +39,21 @@ def main():
     parser.add_argument("--bivariate-dist-x", type=str, default=None)
     parser.add_argument("--bivariate-dist-y", type=str, default=None)
 
+    # Consultas parametrizadas
+    parser.add_argument("--binom-col", type=str, help="Coluna binária para binomial")
+    parser.add_argument("--binom-n", type=int, default=None, help="n da binomial")
+    parser.add_argument("--binom-k", type=int, default=None, help="k da binomial")
+    parser.add_argument("--binom-success", type=str, default=None, help="Valor de sucesso (opcional)")
+
+    parser.add_argument("--normal-col", type=str, help="Coluna numérica para normal")
+    parser.add_argument("--normal-min", type=float, default=None, help="Limite inferior do intervalo")
+    parser.add_argument("--normal-max", type=float, default=None, help="Limite superior do intervalo")
+
+    parser.add_argument("--corr-pair", nargs=2, action="append", metavar=("X", "Y"),
+                        help="Par de colunas para correlação (pode repetir)")
+    parser.add_argument("--regress-predict", nargs=3, action="append", metavar=("X", "Y", "X0"),
+                        help="Par de colunas para regressão e predição (pode repetir)")
+
     args = parser.parse_args()
     file_path = args.file
 
@@ -105,6 +120,33 @@ def main():
                 dist_x=args.bivariate_dist_x,
                 dist_y=args.bivariate_dist_y
             )
+
+        custom_queries = {}
+        if args.binom_col and args.binom_n is not None and args.binom_k is not None:
+            custom_queries["binomial"] = {
+                "col": args.binom_col,
+                "n": args.binom_n,
+                "k": args.binom_k,
+                "success_value": args.binom_success,
+            }
+        if args.normal_col and args.normal_min is not None and args.normal_max is not None:
+            custom_queries["normal_interval"] = {
+                "col": args.normal_col,
+                "a": args.normal_min,
+                "b": args.normal_max,
+            }
+        if args.corr_pair:
+            custom_queries["correlations"] = [
+                {"x": x, "y": y} for x, y in args.corr_pair
+            ]
+        if args.regress_predict:
+            regressions = []
+            for x, y, x0 in args.regress_predict:
+                regressions.append({"x": x, "y": y, "x0": float(x0)})
+            custom_queries["regressions"] = regressions
+
+        if custom_queries:
+            dataset.run_custom_queries(custom_queries)
 
         try:
             output_dir = dataset.export_all(

@@ -14,6 +14,7 @@ from fastapi.templating import Jinja2Templates
 
 from data_loading.factory import create_reader, load_implementations
 from domain.dataset import DataSet
+from analysis.custom_queries import parse_pair_line
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -57,6 +58,18 @@ async def analyze(
     bi_mode: str = Form("copula"),
     bi_dist_x: str = Form(""),
     bi_dist_y: str = Form(""),
+    # custom queries
+    binom_enabled: bool = Form(False),
+    binom_col: str = Form(""),
+    binom_n: int = Form(0),
+    binom_k: int = Form(0),
+    binom_success: str = Form(""),
+    normal_enabled: bool = Form(False),
+    normal_col: str = Form(""),
+    normal_min: str = Form(""),
+    normal_max: str = Form(""),
+    corr_pairs: str = Form(""),
+    regress_pairs: str = Form(""),
 ):
     load_implementations()
 
@@ -110,6 +123,49 @@ async def analyze(
                 dist_x=bi_dist_x or None,
                 dist_y=bi_dist_y or None,
             )
+
+        custom_queries = {}
+        if binom_enabled and binom_col and binom_n > 0:
+            custom_queries["binomial"] = {
+                "col": binom_col,
+                "n": binom_n,
+                "k": binom_k,
+                "success_value": binom_success or None,
+            }
+        if normal_enabled and normal_col and normal_min != "" and normal_max != "":
+            a_val = _to_float_or_none(normal_min)
+            b_val = _to_float_or_none(normal_max)
+            if a_val is not None and b_val is not None:
+                custom_queries["normal_interval"] = {
+                    "col": normal_col,
+                    "a": a_val,
+                    "b": b_val,
+                }
+        if corr_pairs:
+            pairs = []
+            for line in corr_pairs.splitlines():
+                parsed = parse_pair_line(line, 2)
+                if parsed:
+                    x, y = parsed
+                    pairs.append({"x": x, "y": y})
+            if pairs:
+                custom_queries["correlations"] = pairs
+        if regress_pairs:
+            pairs = []
+            for line in regress_pairs.splitlines():
+                parsed = parse_pair_line(line, 3)
+                if parsed:
+                    x, y, x0 = parsed
+                    try:
+                        x0_val = float(x0)
+                    except Exception:
+                        continue
+                    pairs.append({"x": x, "y": y, "x0": x0_val})
+            if pairs:
+                custom_queries["regressions"] = pairs
+
+        if custom_queries:
+            dataset.run_custom_queries(custom_queries)
 
         output_dir = dataset.export_all(
             output_base_dir=OUTPUT_BASE,

@@ -422,6 +422,7 @@ class ReportGenerator:
         artificial_report: Dict[str, Any],
         generation_reports: Dict[str, Any],
         summary_chart_path: Path = None,
+        custom_queries: Dict[str, Any] = None,
     ) -> Path:
         """
         Gera relatório final consolidado com fórmulas e explicações.
@@ -491,6 +492,70 @@ class ReportGenerator:
                         f.write(
                             f"![Scatter {item['x']} vs {item['y']}]({chart_path.name})\n\n"
                         )
+
+            if custom_queries:
+                f.write("## 🧩 Consultas Parametrizadas\n\n")
+
+                binom = custom_queries.get("binomial")
+                if binom:
+                    f.write("### Distribuição Binomial\n\n")
+                    if binom.get("error"):
+                        f.write(f"- Erro: {binom['error']}\n\n")
+                    else:
+                        f.write(
+                            f"- Coluna: {binom.get('col')}\n"
+                            f"- Sucesso: {binom.get('success_value')}\n"
+                            f"- n={binom.get('n')} | k={binom.get('k')} | p={binom.get('p'):.4f}\n"
+                            f"- P(X=k) = {binom.get('prob_k'):.6f}\n\n"
+                        )
+
+                normal = custom_queries.get("normal_interval")
+                if normal:
+                    f.write("### Distribuição Normal (Intervalo)\n\n")
+                    if normal.get("error"):
+                        f.write(f"- Erro: {normal['error']}\n\n")
+                    else:
+                        f.write(
+                            f"- Coluna: {normal.get('col')}\n"
+                            f"- Média={normal.get('mean'):.4f} | Desvio={normal.get('std'):.4f}\n"
+                            f"- Intervalo: [{normal.get('a')}, {normal.get('b')}]\n"
+                            f"- Probabilidade no intervalo = {normal.get('prob_interval'):.6f}\n\n"
+                        )
+
+                corr_list = custom_queries.get("correlations") or []
+                if corr_list:
+                    f.write("### Correlações Específicas\n\n")
+                    for item in corr_list:
+                        if item.get("error"):
+                            f.write(f"- {item.get('x')} vs {item.get('y')}: {item['error']}\n")
+                            continue
+                        corr = item.get("correlacao", {})
+                        f.write(
+                            f"- {item.get('x')} vs {item.get('y')}: "
+                            f"Pearson r={corr.get('pearson_r'):.4f} (p={corr.get('pearson_p'):.4f}), "
+                            f"Spearman ρ={corr.get('spearman_r'):.4f} (p={corr.get('spearman_p'):.4f})\n"
+                        )
+                    f.write("\n")
+
+                reg_list = custom_queries.get("regressions") or []
+                if reg_list:
+                    f.write("### Regressões com Predição\n\n")
+                    for item in reg_list:
+                        if item.get("error"):
+                            f.write(f"- {item.get('x')} vs {item.get('y')}: {item['error']}\n")
+                            continue
+                        reg = item.get("regressao", {})
+                        if reg.get("error"):
+                            f.write(
+                                f"- {item.get('x')} vs {item.get('y')}: {reg.get('error')}\n"
+                            )
+                            continue
+                        f.write(
+                            f"- {item.get('x')} vs {item.get('y')}: "
+                            f"y = {reg.get('intercept'):.4f} + {reg.get('slope'):.4f}x | "
+                            f"x0={reg.get('x0')} => ŷ={reg.get('y_hat'):.4f}\n"
+                        )
+                    f.write("\n")
 
             if artificial_report:
                 f.write("## 🕵️ Detector de Dados Artificiais\n\n")
