@@ -9,8 +9,10 @@ from analysis.statistical_functions import (
     calc_frequencies,
     calc_central_tendency,
     calc_separatrizes,
-    calc_dispersion
+    calc_dispersion,
+    calc_shape_metrics
 )
+from analysis.distribution_fitting import fit_distributions
 
 class DiscreteType(IVariableType):
     """Variável numérica que assume valores inteiros (contagens)."""
@@ -35,19 +37,10 @@ class DiscreteType(IVariableType):
         result['separatrizes'] = calc_separatrizes(data)
         result['dispersao'] = calc_dispersion(data)
 
-        # --- ITENS DA VERSÃO FINAL ---
-        
-        # 1. Assimetria e Curtose (Encontrar caudas e pico)
-        if not clean_data.empty:
-            result['forma'] = {
-                'assimetria': float(skew(clean_data)),
-                'curtose': float(kurtosis(clean_data))
-            }
-            
-            # 2. Distribuição (Ajuste Simples)
-            result['distribuicao'] = {
-                'sugerida': "Poisson" if clean_data.mean() > 0 else "Indefinida",
-                'media_lambda': float(clean_data.mean())
-            }
+        # Forma da distribuição
+        result['forma'] = calc_shape_metrics(data)
+
+        # Ajuste de distribuições
+        result['distribuicoes'] = fit_distributions(data)
 
         return result

@@ -25,6 +25,11 @@ class DataSet:
         self.name = name
         self.dataframe = dataframe
         self.variables: List[Variable] = []
+        self.bivariate_results: List[Dict[str, Any]] = []
+        self.artificial_data_report: Optional[Dict[str, Any]] = None
+        self.generation_reports: Dict[str, Any] = {}
+        self.synthetic_data: List[Dict[str, Any]] = []
+        self.custom_queries: Dict[str, Any] = {}
 
         self._create_variables()
 
@@ -82,6 +87,169 @@ class DataSet:
         for variable in self.variables:
             variable.print_analysis()
 
+    def analyze_bivariate(self):
+        """Calcula correlação e regressão para pares numéricos."""
+        from analysis.bivariate_functions import calc_correlations, calc_linear_regression
+
+        numeric_vars = [
+            v for v in self.variables
+            if pd.api.types.is_numeric_dtype(v.data)
+        ]
+        results = []
+        for i in range(len(numeric_vars)):
+            for j in range(i + 1, len(numeric_vars)):
+                var_x = numeric_vars[i]
+                var_y = numeric_vars[j]
+                corr = calc_correlations(var_x.data, var_y.data)
+                reg = calc_linear_regression(var_x.data, var_y.data)
+                if corr or reg:
+                    results.append({
+                        "x": var_x.name,
+                        "y": var_y.name,
+                        "correlacao": corr,
+                        "regressao": reg,
+                    })
+        self.bivariate_results = results
+        return results
+
+    def detect_artificial_data(self, thresholds: Dict[str, float] = None, weights: Dict[str, int] = None):
+        """Executa detector simples de dados artificiais."""
+        from analysis.artificial_data_detector import detect_artificial_patterns
+
+        self.artificial_data_report = detect_artificial_patterns(
+            self.dataframe,
+            thresholds=thresholds,
+            weights=weights
+        )
+        return self.artificial_data_report
+
+    def generate_univariate_synthetic(self, variable_name: str, n: int, **kwargs):
+        """Gera dados sintéticos univariados."""
+        from analysis.data_generators import generate_univariate
+        var = self.get_variable(variable_name)
+        if not var:
+            raise ValueError(f"Variável '{variable_name}' não encontrada.")
+        synthetic, meta = generate_univariate(var.data, n=n, **kwargs)
+        self.generation_reports.setdefault("univariado", []).append({
+            "variavel": variable_name,
+            "meta": meta,
+        })
+        self.synthetic_data.append({
+            "type": "univariado",
+            "name": variable_name,
+            "data": synthetic.to_frame(name=variable_name)
+        })
+        return synthetic, meta
+
+    def generate_bivariate_synthetic(self, x_name: str, y_name: str, n: int, **kwargs):
+        """Gera dados sintéticos bivariados."""
+        from analysis.data_generators import generate_bivariate
+        var_x = self.get_variable(x_name)
+        var_y = self.get_variable(y_name)
+        if not var_x or not var_y:
+            raise ValueError("Variáveis não encontradas.")
+        synthetic, meta = generate_bivariate(var_x.data, var_y.data, n=n, **kwargs)
+        self.generation_reports.setdefault("bivariado", []).append({
+            "variavel_x": x_name,
+            "variavel_y": y_name,
+            "meta": meta,
+        })
+        self.synthetic_data.append({
+            "type": "bivariado",
+            "name": f"{x_name}_vs_{y_name}",
+            "data": synthetic
+        })
+        return synthetic, meta
+
+    def run_custom_queries(self, queries: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Executa consultas parametrizadas (binomial, normal, correlação e regressão).
+        """
+        from analysis.custom_queries import (
+            binomial_probability,
+            normal_interval_probability,
+            correlation_for_pair,
+            regression_with_prediction,
+        )
+
+        results: Dict[str, Any] = {}
+
+        binom = queries.get("binomial")
+        if binom:
+            var = self.get_variable(binom.get("col", ""))
+            if var:
+                results["binomial"] = binomial_probability(
+                    var.data,
+                    n=int(binom["n"]),
+                    k=int(binom["k"]),
+                    success_value=binom.get("success_value"),
+                )
+                results["binomial"]["col"] = var.name
+            else:
+                results["binomial"] = {"error": "Variável binomial não encontrada."}
+
+        normal = queries.get("normal_interval")
+        if normal:
+            var = self.get_variable(normal.get("col", ""))
+            if var:
+                results["normal_interval"] = normal_interval_probability(
+                    var.data,
+                    a=float(normal["a"]),
+                    b=float(normal["b"]),
+                )
+                results["normal_interval"]["col"] = var.name
+            else:
+                results["normal_interval"] = {"error": "Variável normal não encontrada."}
+
+        corr_pairs = queries.get("correlations", [])
+        if corr_pairs:
+            corr_results = []
+            for pair in corr_pairs:
+                x_var = self.get_variable(pair.get("x", ""))
+                y_var = self.get_variable(pair.get("y", ""))
+                if not x_var or not y_var:
+                    corr_results.append({
+                        "x": pair.get("x"),
+                        "y": pair.get("y"),
+                        "error": "Variáveis não encontradas."
+                    })
+                    continue
+                corr = correlation_for_pair(x_var.data, y_var.data)
+                corr_results.append({
+                    "x": x_var.name,
+                    "y": y_var.name,
+                    "correlacao": corr
+                })
+            results["correlations"] = corr_results
+
+        regress_pairs = queries.get("regressions", [])
+        if regress_pairs:
+            reg_results = []
+            for pair in regress_pairs:
+                x_var = self.get_variable(pair.get("x", ""))
+                y_var = self.get_variable(pair.get("y", ""))
+                if not x_var or not y_var:
+                    reg_results.append({
+                        "x": pair.get("x"),
+                        "y": pair.get("y"),
+                        "error": "Variáveis não encontradas."
+                    })
+                    continue
+                reg = regression_with_prediction(
+                    x_var.data,
+                    y_var.data,
+                    float(pair.get("x0")),
+                )
+                reg_results.append({
+                    "x": x_var.name,
+                    "y": y_var.name,
+                    "regressao": reg,
+                })
+            results["regressions"] = reg_results
+
+        self.custom_queries = results
+        return results
+
     def get_summary(self) -> Dict[str, Any]:
         """
         Retorna um resumo do dataset.
@@ -115,7 +283,15 @@ class DataSet:
 
         print(f"\n{'='*60}\n")
 
-    def export_all(self, output_base_dir: Path = None, generate_charts: bool = True, generate_pdfs: bool = True) -> Path:
+    def export_all(
+        self,
+        output_base_dir: Path = None,
+        generate_charts: bool = True,
+        generate_pdfs: bool = True,
+        generate_bivariate: bool = True,
+        detect_artificial: bool = True,
+        generate_final_report: bool = True
+    ) -> Path:
         """
         Exporta análises completas apenas em PDF com imagens embutidas.
 
@@ -131,7 +307,6 @@ class DataSet:
         import shutil
         from visualization.chart_generator import ChartGenerator
         from export.report_generator import ReportGenerator
-        from export.pdf_generator import PDFGenerator
 
         # Define diretório de output final
         if output_base_dir is None:
@@ -176,6 +351,42 @@ class DataSet:
                 except Exception as e:
                     print(f"\n⚠️  Erro ao gerar gráfico resumo: {e}")
 
+            # Bivariado: correlação + regressão + gráficos
+            bivariate_results = []
+            if generate_bivariate:
+                try:
+                    bivariate_results = self.analyze_bivariate()
+                    if generate_charts and bivariate_results:
+                        chart_gen = ChartGenerator(temp_dir)
+                        for item in bivariate_results:
+                            x_name = item["x"]
+                            y_name = item["y"]
+                            var_x = self.get_variable(x_name)
+                            var_y = self.get_variable(y_name)
+                            if var_x and var_y:
+                                chart_path = chart_gen.generate_scatter_with_regression(
+                                    var_x.data,
+                                    var_y.data,
+                                    x_name,
+                                    y_name,
+                                    item.get("regressao", {}),
+                                    item.get("correlacao", {})
+                                )
+                                if chart_path:
+                                    item["chart_path"] = chart_path
+                    print(f"\n✅ Análise bivariada concluída")
+                except Exception as e:
+                    print(f"\n⚠️  Erro na análise bivariada: {e}")
+
+            # Detector de dados artificiais
+            artificial_report = None
+            if detect_artificial:
+                try:
+                    artificial_report = self.detect_artificial_data()
+                    print(f"\n✅ Detector de dados artificiais concluído")
+                except Exception as e:
+                    print(f"\n⚠️  Erro no detector de dados artificiais: {e}")
+
             # Gera relatório geral
             try:
                 report_gen = ReportGenerator(temp_dir)
@@ -189,10 +400,29 @@ class DataSet:
             except Exception as e:
                 print(f"⚠️  Erro ao gerar relatório geral: {e}")
 
+            # Relatório final consolidado
+            if generate_final_report:
+                try:
+                    report_gen = ReportGenerator(temp_dir)
+                    variables_summary = [var.get_summary() for var in self.variables]
+                    report_gen.generate_final_report(
+                        self.name,
+                        variables_summary,
+                        bivariate_results,
+                        artificial_report or {},
+                        self.generation_reports,
+                        summary_chart_path,
+                        self.custom_queries
+                    )
+                    print(f"✅ Relatório final MD gerado")
+                except Exception as e:
+                    print(f"⚠️  Erro ao gerar relatório final: {e}")
+
             # Gera PDFs de todos os relatórios Markdown
             if generate_pdfs:
                 print(f"\n📄 Convertendo para PDF com imagens embutidas...")
                 try:
+                    from export.pdf_generator import PDFGenerator
                     pdf_gen = PDFGenerator(final_output_dir)  # PDFs vão direto para output
                     pdf_files = pdf_gen.generate_all_pdfs(temp_dir)  # Lê MDs do temp
                     print(f"✅ {len(pdf_files)} PDF(s) gerado(s)")
@@ -200,8 +430,24 @@ class DataSet:
                     print(f"⚠️  Erro ao gerar PDFs: {e}")
 
             print(f"\n🎉 Exportação concluída!")
-            print(f"📄 PDFs salvos em: {final_output_dir.absolute()}")
-            print(f"💡 Apenas PDFs foram mantidos (com imagens embutidas)\n")
+            if generate_pdfs:
+                print(f"📄 PDFs salvos em: {final_output_dir.absolute()}")
+                print(f"💡 Apenas PDFs foram mantidos (com imagens embutidas)\n")
+            else:
+                print(f"📂 Saída salva em: {final_output_dir.absolute()}\n")
+
+            # Salva dados sintéticos, se existirem
+            if self.synthetic_data:
+                try:
+                    for item in self.synthetic_data:
+                        data = item["data"]
+                        name = item["name"]
+                        if hasattr(data, "to_csv"):
+                            out_path = final_output_dir / f"sintetico_{item['type']}_{name}.csv"
+                            data.to_csv(out_path, index=False)
+                    print(f"🧪 Dados sintéticos salvos em: {final_output_dir.absolute()}")
+                except Exception as e:
+                    print(f"⚠️  Erro ao salvar dados sintéticos: {e}")
 
         finally:
             # Limpa diretório temporário

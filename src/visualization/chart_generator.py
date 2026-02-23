@@ -362,3 +362,55 @@ class ChartGenerator:
         plt.close()
 
         return chart_path
+
+    def generate_scatter_with_regression(
+        self,
+        x: pd.Series,
+        y: pd.Series,
+        x_name: str,
+        y_name: str,
+        regression_result: Dict[str, Any],
+        correlation_result: Dict[str, Any]
+    ) -> Optional[Path]:
+        """
+        Gera scatter plot com linha de regressão e anotações.
+        """
+        x_clean = pd.to_numeric(x, errors="coerce")
+        y_clean = pd.to_numeric(y, errors="coerce")
+        mask = x_clean.notna() & y_clean.notna()
+        x_clean = x_clean[mask]
+        y_clean = y_clean[mask]
+        if x_clean.empty:
+            return None
+
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.scatter(x_clean, y_clean, alpha=0.6, color='teal', label='Observações')
+
+        slope = regression_result.get("slope")
+        intercept = regression_result.get("intercept")
+        if slope is not None and intercept is not None:
+            xs = np.linspace(x_clean.min(), x_clean.max(), 100)
+            ys = slope * xs + intercept
+            ax.plot(xs, ys, color='darkred', linewidth=2, label='Regressão linear')
+
+        ax.set_xlabel(x_name, fontsize=12, fontweight='bold')
+        ax.set_ylabel(y_name, fontsize=12, fontweight='bold')
+        ax.set_title(f'{y_name} vs {x_name}', fontsize=14, fontweight='bold', pad=20)
+        ax.grid(alpha=0.3)
+        ax.legend()
+
+        # Annotation box
+        pearson_r = correlation_result.get("pearson_r")
+        pearson_p = correlation_result.get("pearson_p")
+        r2 = regression_result.get("r2")
+        text = f"r={pearson_r:.3f} (p={pearson_p:.3f})\\nR²={r2:.3f}" if pearson_r is not None else ""
+        if text:
+            ax.text(0.02, 0.95, text, transform=ax.transAxes,
+                   fontsize=10, verticalalignment='top',
+                   bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+        plt.tight_layout()
+        chart_path = self.output_dir / f"{x_name}_vs_{y_name}_scatter_regressao.png"
+        plt.savefig(chart_path, dpi=300, bbox_inches='tight')
+        plt.close()
+        return chart_path

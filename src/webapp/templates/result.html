@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resultados</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-badge">Resultados</div>
+        <h1>Arquivos gerados</h1>
+        <p>Baixe relatorios e artefatos da execucao atual.</p>
+        <div class="hero-meta">
+          <span>Execucao: {{ run_id }}</span>
+          <span>Total: {{ files|length }} arquivo(s)</span>
+        </div>
+      </header>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Downloads</h2>
+          <p>Clique para baixar cada arquivo individualmente.</p>
+        </div>
+
+        <ul class="file-list">
+          {% for file in files %}
+          <li>
+            <a href="/download/{{ run_id }}/{{ file }}">{{ file }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <div class="actions">
+          <a class="cta" href="/">Nova analise</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -10,8 +10,10 @@ from analysis.statistical_functions import (
     calc_frequencies,
     calc_central_tendency,
     calc_separatrizes,
-    calc_dispersion
+    calc_dispersion,
+    calc_shape_metrics
 )
+from analysis.distribution_fitting import fit_distributions
 
 class ContinuousType(IVariableType):
     """Variável numérica que pode assumir qualquer valor em um intervalo."""
@@ -39,20 +41,10 @@ class ContinuousType(IVariableType):
         result['separatrizes'] = calc_separatrizes(data)
         result['dispersao'] = calc_dispersion(data)
 
-        # --- VERSÃO FINAL --- 
-        
-        # 1. Assimetria e Curtose
-        result['forma'] = {
-            'assimetria': skew(clean_data),
-            'curtose': kurtosis(clean_data)
-        }
+        # Forma da distribuição
+        result['forma'] = calc_shape_metrics(data)
 
-        # 2. Ajuste de Distribuição Normal
-        if n > 0:
-            mu, std = norm.fit(clean_data)
-            result['distribuicao'] = {
-                'tipo': 'Normal',
-                'parametros': {'media': mu, 'desvio_padrão': std}
-            }
+        # Ajuste de distribuições
+        result['distribuicoes'] = fit_distributions(data)
 
         return result

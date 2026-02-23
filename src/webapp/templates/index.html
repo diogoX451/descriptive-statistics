@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Descriptive Statistics Web</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="hero">
+        <div class="hero-badge">Descriptive Statistics</div>
+        <h1>Console de Analise</h1>
+        <p>Envie CSV/XLSX, configure os modulos e gere resultados em uma execucao.</p>
+        <div class="hero-meta">
+          <span>CSV e XLSX</span>
+          <span>Analise univariada e bivariada</span>
+          <span>Relatorios e dados sinteticos</span>
+        </div>
+      </header>
+
+      {% if error %}
+      <div class="alert">{{ error }}</div>
+      {% endif %}
+
+      <form class="workspace" action="/analyze" method="post" enctype="multipart/form-data">
+        <section class="panel">
+          <div class="panel-head">
+            <h2>1. Arquivo</h2>
+            <p>Entrada principal da analise.</p>
+          </div>
+          <div class="panel-body">
+            <label class="field field-wide">
+              <span>Selecione o arquivo</span>
+              <input type="file" name="data_file" accept=".csv,.xlsx" required />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>2. Modulos de saida</h2>
+            <p>Escolha quais blocos devem ser executados.</p>
+          </div>
+          <div class="toggle-grid">
+            <label class="toggle"><input type="checkbox" name="generate_charts" checked /> Gerar graficos</label>
+            <label class="toggle"><input type="checkbox" name="generate_pdfs" checked /> Gerar PDFs</label>
+            <label class="toggle"><input type="checkbox" name="generate_bivariate" checked /> Analise bivariada</label>
+            <label class="toggle"><input type="checkbox" name="detect_artificial" checked /> Detector artificial</label>
+            <label class="toggle"><input type="checkbox" name="generate_final_report" checked /> Relatorio final</label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>3. Gerador univariado</h2>
+            <p>Cria amostras sinteticas de uma variavel.</p>
+          </div>
+          <div class="panel-body grid">
+            <label class="toggle"><input type="checkbox" name="uni_enabled" /> Ativar gerador</label>
+            <label class="field">
+              <span>Variavel</span>
+              <input type="text" name="uni_var" placeholder="coluna" />
+            </label>
+            <label class="field">
+              <span>N</span>
+              <input type="number" name="uni_n" min="0" />
+            </label>
+            <label class="field">
+              <span>Metodo</span>
+              <select name="uni_method">
+                <option value="fit">fit</option>
+                <option value="bootstrap">bootstrap</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Distribuicao</span>
+              <input type="text" name="uni_dist" placeholder="norm, expon..." />
+            </label>
+            <label class="field">
+              <span>Media</span>
+              <input type="text" name="uni_mean" placeholder="opcional" />
+            </label>
+            <label class="field">
+              <span>Desvio</span>
+              <input type="text" name="uni_std" placeholder="opcional" />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>4. Gerador bivariado</h2>
+            <p>Gera pares correlacionados com distribuicoes configuraveis.</p>
+          </div>
+          <div class="panel-body grid">
+            <label class="toggle"><input type="checkbox" name="bi_enabled" /> Ativar gerador</label>
+            <label class="field">
+              <span>Variavel X</span>
+              <input type="text" name="bi_x" placeholder="coluna X" />
+            </label>
+            <label class="field">
+              <span>Variavel Y</span>
+              <input type="text" name="bi_y" placeholder="coluna Y" />
+            </label>
+            <label class="field">
+              <span>N</span>
+              <input type="number" name="bi_n" min="0" />
+            </label>
+            <label class="field">
+              <span>Correlacao alvo</span>
+              <input type="text" name="bi_corr" placeholder="0.8" />
+            </label>
+            <label class="field">
+              <span>Modo</span>
+              <select name="bi_mode">
+                <option value="copula">copula</option>
+                <option value="normal">normal</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Distribuicao X</span>
+              <input type="text" name="bi_dist_x" placeholder="norm" />
+            </label>
+            <label class="field">
+              <span>Distribuicao Y</span>
+              <input type="text" name="bi_dist_y" placeholder="norm" />
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h2>5. Consultas parametrizadas</h2>
+            <p>Probabilidade, correlacoes especificas e regressao com predicao.</p>
+          </div>
+
+          <div class="panel-body">
+            <h3 class="subhead">Binomial</h3>
+            <div class="grid">
+              <label class="toggle"><input type="checkbox" name="binom_enabled" /> Ativar</label>
+              <label class="field">
+                <span>Coluna</span>
+                <input type="text" name="binom_col" placeholder="sexo" />
+              </label>
+              <label class="field">
+                <span>n</span>
+                <input type="number" name="binom_n" min="0" />
+              </label>
+              <label class="field">
+                <span>k</span>
+                <input type="number" name="binom_k" min="0" />
+              </label>
+              <label class="field">
+                <span>Sucesso</span>
+                <input type="text" name="binom_success" placeholder="masculino" />
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <h3 class="subhead">Normal (intervalo)</h3>
+            <div class="grid">
+              <label class="toggle"><input type="checkbox" name="normal_enabled" /> Ativar</label>
+              <label class="field">
+                <span>Coluna</span>
+                <input type="text" name="normal_col" placeholder="peso" />
+              </label>
+              <label class="field">
+                <span>Min</span>
+                <input type="text" name="normal_min" placeholder="400" />
+              </label>
+              <label class="field">
+                <span>Max</span>
+                <input type="text" name="normal_max" placeholder="500" />
+              </label>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            <div class="grid">
+              <label class="field field-wide">
+                <span>Correlacoes (uma por linha: X,Y)</span>
+                <textarea name="corr_pairs" rows="3" placeholder="peso,tamanho&#10;idade_mae,peso_bebe"></textarea>
+              </label>
+              <label class="field field-wide">
+                <span>Regressoes (uma por linha: X,Y,X0)</span>
+                <textarea name="regress_pairs" rows="3" placeholder="peso,tamanho,1200&#10;idade_mae,peso_bebe,60"></textarea>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <div class="submit-row">
+          <button class="cta" type="submit">Executar Analise</button>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>
